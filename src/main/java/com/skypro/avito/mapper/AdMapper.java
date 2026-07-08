@@ -11,6 +11,7 @@ import org.mapstruct.Mapping;
 public interface AdMapper {
 
     @Mapping(source = "author.id", target = "author")
+    @Mapping(target = "image", expression = "java(\"/images/ads/\" + adEntity.getImage())")
     Ad toAd(AdEntity adEntity);
 
     @Mapping(target = "id", ignore = true)
@@ -25,5 +26,6 @@ public interface AdMapper {
     @Mapping(source = "author.lastName", target = "authorLastName")
     @Mapping(source = "author.username", target = "email")
     @Mapping(source = "author.phone", target = "phone")
+    @Mapping(target = "image", expression = "java(\"/images/ads/\" + adEntity.getImage())")
     ExtendedAd toExtendedAd(AdEntity adEntity);
 }
