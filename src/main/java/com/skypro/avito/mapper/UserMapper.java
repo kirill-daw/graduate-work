@@ -16,8 +16,6 @@ public interface UserMapper {
     @Mapping(target = "comments", ignore = true)
     UserEntity toEntity(RegisterReq registerReq);
 
-    @Mapping(source = "username", target = "email")
-    @Mapping(source = "role", target = "role")
     User toUser(UserEntity userEntity);
 
     default String mapRoleToString(com.skypro.avito.dto.Role role) {

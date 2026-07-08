@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 public class Ad {
 
     @Schema(description = "id объявления")
-    private Integer pk;
+    private Integer id;
 
     @Schema(description = "id автора объявления")
     private Integer author;
@@ -22,6 +22,12 @@ public class Ad {
     @Schema(description = "заголовок объявления")
     private String title;
 
+    @Schema(description = "описание объявления")
+    private String description;
+
     @Schema(description = "ссылка на картинку объявления")
     private String image;
+
+    @Schema(description = "дата и время создания объявления в миллисекундах с 00:00:00 01.01.1970")
+    private Long createdAt;
 }
