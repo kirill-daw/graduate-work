@@ -1,5 +1,10 @@
 package com.skypro.avito.controller;
 
+import com.skypro.avito.dto.Ad;
+import com.skypro.avito.dto.Ads;
+import com.skypro.avito.dto.CreateOrUpdateAd;
+import com.skypro.avito.dto.ExtendedAd;
+import com.skypro.avito.service.AdService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -7,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -18,16 +24,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import com.skypro.avito.dto.Ad;
-import com.skypro.avito.dto.Ads;
-import com.skypro.avito.dto.CreateOrUpdateAd;
-import com.skypro.avito.dto.ExtendedAd;
-
-import java.util.Collections;
 
 @RestController
 @RequestMapping("/ads")
 public class AdController {
+
+    private final AdService adService;
+
+    public AdController(AdService adService) {
+        this.adService = adService;
+    }
 
     @Operation(summary = "Получение всех объявлений", operationId = "getAllAds")
     @ApiResponse(responseCode = "200", description = "OK",
@@ -35,8 +41,7 @@ public class AdController {
                     schema = @Schema(implementation = Ads.class)))
     @GetMapping
     public ResponseEntity<Ads> getAllAds() {
-        Ads ads = new Ads(0, Collections.emptyList());
-        return ResponseEntity.ok(ads);
+        return ResponseEntity.ok(adService.getAllAds());
     }
 
     @Operation(summary = "Добавление объявления", operationId = "addAd")
@@ -46,8 +51,10 @@ public class AdController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Ad> addAd(@RequestPart("properties") CreateOrUpdateAd properties,
-                                    @RequestPart("image") MultipartFile image) {
-        Ad ad = new Ad(1, null, null, null, null);
+                                    @RequestPart("image") MultipartFile image,
+                                    Authentication authentication) {
+        String imagePath = image.getOriginalFilename();
+        Ad ad = adService.addAd(properties, imagePath, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(ad);
     }
 
@@ -59,8 +66,7 @@ public class AdController {
     @ApiResponse(responseCode = "404", description = "Not found")
     @GetMapping("/{id}")
     public ResponseEntity<ExtendedAd> getAd(@PathVariable Integer id) {
-        ExtendedAd extendedAd = new ExtendedAd();
-        return ResponseEntity.ok(extendedAd);
+        return ResponseEntity.ok(adService.getAd(id));
     }
 
     @Operation(summary = "Удаление объявления", operationId = "removeAd")
@@ -70,6 +76,7 @@ public class AdController {
     @ApiResponse(responseCode = "404", description = "Not found")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> removeAd(@PathVariable Integer id) {
+        adService.removeAd(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -83,8 +90,7 @@ public class AdController {
     @PatchMapping("/{id}")
     public ResponseEntity<Ad> updateAd(@PathVariable Integer id,
                                        @RequestBody CreateOrUpdateAd createOrUpdateAd) {
-        Ad ad = new Ad(id, null, createOrUpdateAd.getPrice(), createOrUpdateAd.getTitle(), null);
-        return ResponseEntity.ok(ad);
+        return ResponseEntity.ok(adService.updateAd(id, createOrUpdateAd));
     }
 
     @Operation(summary = "Получение объявлений авторизованного пользователя", operationId = "getAdsMe")
@@ -93,9 +99,8 @@ public class AdController {
                     schema = @Schema(implementation = Ads.class)))
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @GetMapping("/me")
-    public ResponseEntity<Ads> getAdsMe() {
-        Ads ads = new Ads(0, Collections.emptyList());
-        return ResponseEntity.ok(ads);
+    public ResponseEntity<Ads> getAdsMe(Authentication authentication) {
+        return ResponseEntity.ok(adService.getAdsMe(authentication.getName()));
     }
 
     @Operation(summary = "Обновление картинки объявления", operationId = "updateImage")
