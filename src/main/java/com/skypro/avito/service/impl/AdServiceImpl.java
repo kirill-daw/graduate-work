@@ -11,6 +11,7 @@ import com.skypro.avito.repository.AdRepository;
 import com.skypro.avito.repository.UserRepository;
 import com.skypro.avito.service.AdService;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,12 +41,12 @@ public class AdServiceImpl implements AdService {
     }
 
     @Override
-    public Ad addAd(CreateOrUpdateAd createOrUpdateAd, String imagePath, String username) {
+    public Ad addAd(CreateOrUpdateAd createOrUpdateAd, MultipartFile image, String username) {
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         AdEntity adEntity = adMapper.toEntity(createOrUpdateAd);
         adEntity.setAuthor(user);
-        adEntity.setImage(imagePath);
+        adEntity.setImage(image.getOriginalFilename());
         adEntity.setCreatedAt(System.currentTimeMillis());
         AdEntity saved = adRepository.save(adEntity);
         return adMapper.toAd(saved);
