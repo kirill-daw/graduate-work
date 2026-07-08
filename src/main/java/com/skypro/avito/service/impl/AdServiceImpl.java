@@ -79,7 +79,7 @@ public class AdServiceImpl implements AdService {
     public Ads getAdsMe(String username) {
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        List<AdEntity> adEntities = adRepository.findByAuthorId(user.getId());
+        List<AdEntity> adEntities = adRepository.findAllByAuthorId(user.getId());
         List<Ad> ads = adEntities.stream()
                 .map(adMapper::toAd)
                 .collect(Collectors.toList());

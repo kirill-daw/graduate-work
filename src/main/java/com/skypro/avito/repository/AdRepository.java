@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface AdRepository extends JpaRepository<AdEntity, Integer> {
 
-    List<AdEntity> findByAuthorId(Integer authorId);
+    List<AdEntity> findAllByAuthorId(Integer authorId);
 }
