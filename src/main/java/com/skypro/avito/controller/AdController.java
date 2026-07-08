@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,13 +50,10 @@ public class AdController {
                     schema = @Schema(implementation = Ad.class)))
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Ad> addAd(@RequestParam("title") String title,
-                                    @RequestParam("price") Integer price,
-                                    @RequestParam("description") String description,
-                                    @RequestParam("image") MultipartFile image,
+    public ResponseEntity<Ad> addAd(@RequestPart("properties") CreateOrUpdateAd createOrUpdateAd,
+                                    @RequestPart("image") MultipartFile image,
                                     Authentication authentication) {
-        CreateOrUpdateAd properties = new CreateOrUpdateAd(title, price, description);
-        Ad ad = adService.addAd(properties, image, authentication.getName());
+        Ad ad = adService.addAd(createOrUpdateAd, image, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(ad);
     }
 
