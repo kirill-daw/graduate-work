@@ -48,7 +48,10 @@ public class AdController {
                     schema = @Schema(implementation = Ads.class)))
     @GetMapping
     public ResponseEntity<Ads> getAllAds() {
-        return ResponseEntity.ok(adService.getAllAds());
+        log.info("GET /ads called");
+        Ads ads = adService.getAllAds();
+        log.info("GET /ads returning {} ads", ads.getCount());
+        return ResponseEntity.ok(ads);
     }
 
     @Operation(summary = "Добавление объявления", operationId = "addAd")
