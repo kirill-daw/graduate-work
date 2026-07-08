@@ -1,5 +1,7 @@
 package com.skypro.avito.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skypro.avito.dto.Ad;
 import com.skypro.avito.dto.Ads;
 import com.skypro.avito.dto.CreateOrUpdateAd;
@@ -21,7 +23,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,9 +31,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class AdController {
 
     private final AdService adService;
+    private final ObjectMapper objectMapper;
 
-    public AdController(AdService adService) {
+    public AdController(AdService adService, ObjectMapper objectMapper) {
         this.adService = adService;
+        this.objectMapper = objectMapper;
     }
 
     @Operation(summary = "Получение всех объявлений", operationId = "getAllAds")
@@ -50,9 +53,10 @@ public class AdController {
                     schema = @Schema(implementation = Ad.class)))
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Ad> addAd(@RequestPart("properties") CreateOrUpdateAd createOrUpdateAd,
-                                    @RequestPart("image") MultipartFile image,
-                                    Authentication authentication) {
+    public ResponseEntity<Ad> addAd(@RequestParam("properties") String properties,
+                                    @RequestParam("image") MultipartFile image,
+                                    Authentication authentication) throws JsonProcessingException {
+        CreateOrUpdateAd createOrUpdateAd = objectMapper.readValue(properties, CreateOrUpdateAd.class);
         Ad ad = adService.addAd(createOrUpdateAd, image, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(ad);
     }
