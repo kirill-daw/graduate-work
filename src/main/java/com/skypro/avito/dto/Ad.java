@@ -13,8 +13,8 @@ public class Ad {
     @Schema(description = "id объявления")
     private Integer id;
 
-    @Schema(description = "id автора объявления")
-    private Integer author;
+    @Schema(description = "email автора объявления")
+    private String author;
 
     @Schema(description = "цена объявления")
     private Integer price;
@@ -29,5 +29,5 @@ public class Ad {
     private String image;
 
     @Schema(description = "дата и время создания объявления в миллисекундах с 00:00:00 01.01.1970")
-    private Long createdAt;
+    private Long created_at;
 }
