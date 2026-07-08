@@ -1,12 +1,12 @@
-package ru.skypro.homework.service.impl;
+package com.skypro.avito.service.impl;
 
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
-import ru.skypro.homework.dto.Register;
-import ru.skypro.homework.service.AuthService;
+import com.skypro.avito.dto.RegisterReq;
+import com.skypro.avito.service.AuthService;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -30,16 +30,16 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public boolean register(Register register) {
-        if (manager.userExists(register.getUsername())) {
+    public boolean register(RegisterReq registerReq) {
+        if (manager.userExists(registerReq.getUsername())) {
             return false;
         }
         manager.createUser(
                 User.builder()
                         .passwordEncoder(this.encoder::encode)
-                        .password(register.getPassword())
-                        .username(register.getUsername())
-                        .roles(register.getRole().name())
+                        .password(registerReq.getPassword())
+                        .username(registerReq.getUsername())
+                        .roles(registerReq.getRole().name())
                         .build());
         return true;
     }

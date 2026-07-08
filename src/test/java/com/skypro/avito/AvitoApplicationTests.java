@@ -1,10 +1,10 @@
-package ru.skypro.homework;
+package com.skypro.avito;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class HomeworkApplicationTests {
+class AvitoApplicationTests {
 
     @Test
     void contextLoads() {
