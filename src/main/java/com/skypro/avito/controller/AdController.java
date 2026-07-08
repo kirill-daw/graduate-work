@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/ads")
 public class AdController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdController.class);
 
     private final AdService adService;
     private final ObjectMapper objectMapper;
@@ -103,7 +107,11 @@ public class AdController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @GetMapping("/me")
     public ResponseEntity<Ads> getAdsMe(Authentication authentication) {
-        return ResponseEntity.ok(adService.getAdsMe(authentication.getName()));
+        String username = authentication.getName();
+        log.info("getAdsMe called for user: {}", username);
+        Ads ads = adService.getAdsMe(username);
+        log.info("getAdsMe returning {} ads for user: {}", ads.getCount(), username);
+        return ResponseEntity.ok(ads);
     }
 
     @Operation(summary = "Обновление картинки объявления", operationId = "updateImage")

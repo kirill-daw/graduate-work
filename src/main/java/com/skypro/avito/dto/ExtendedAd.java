@@ -23,7 +23,7 @@ public class ExtendedAd {
     private String description;
 
     @Schema(description = "логин автора объявления")
-    private String author;
+    private String email;
 
     @Schema(description = "ссылка на картинку объявления")
     private String image;
@@ -36,7 +36,4 @@ public class ExtendedAd {
 
     @Schema(description = "заголовок объявления")
     private String title;
-
-    @Schema(description = "дата и время создания объявления в миллисекундах с 00:00:00 01.01.1970")
-    private Long created_at;
 }

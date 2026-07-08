@@ -10,8 +10,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface AdMapper {
 
-    @Mapping(source = "author.username", target = "author")
-    @Mapping(source = "createdAt", target = "created_at")
+    @Mapping(source = "id", target = "pk")
+    @Mapping(source = "author.id", target = "author")
     @Mapping(target = "image", expression = "java(\"/images/ads/\" + adEntity.getImage())")
     Ad toAd(AdEntity adEntity);
 
@@ -25,9 +25,8 @@ public interface AdMapper {
     @Mapping(source = "id", target = "pk")
     @Mapping(source = "author.firstName", target = "authorFirstName")
     @Mapping(source = "author.lastName", target = "authorLastName")
-    @Mapping(source = "author.username", target = "author")
+    @Mapping(source = "author.username", target = "email")
     @Mapping(source = "author.phone", target = "phone")
-    @Mapping(source = "createdAt", target = "created_at")
     @Mapping(target = "image", expression = "java(\"/images/ads/\" + adEntity.getImage())")
     ExtendedAd toExtendedAd(AdEntity adEntity);
 }
