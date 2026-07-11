@@ -19,4 +19,6 @@ public interface AdService {
     void removeAd(Integer id);
 
     Ads getAdsMe(String username);
+
+    void updateImage(Integer id, MultipartFile image);
 }

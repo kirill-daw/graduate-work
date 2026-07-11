@@ -4,8 +4,11 @@ import com.skypro.avito.dto.NewPassword;
 import com.skypro.avito.dto.UpdateUser;
 import com.skypro.avito.dto.User;
 import com.skypro.avito.entity.UserEntity;
+import com.skypro.avito.exception.InvalidPasswordException;
+import com.skypro.avito.exception.UserNotFoundException;
 import com.skypro.avito.mapper.UserMapper;
 import com.skypro.avito.repository.UserRepository;
+import com.skypro.avito.service.ImageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,13 +33,16 @@ public class UserController {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final ImageService imageService;
 
     public UserController(UserRepository userRepository,
                           UserMapper userMapper,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder,
+                          ImageService imageService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
+        this.imageService = imageService;
     }
 
     @Operation(summary = "Получение информации об авторизованном пользователе", operationId = "getUser")
@@ -47,7 +53,7 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<User> getUser(Authentication authentication) {
         UserEntity userEntity = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(authentication.getName()));
         return ResponseEntity.ok(userMapper.toUser(userEntity));
     }
 
@@ -60,7 +66,7 @@ public class UserController {
     public ResponseEntity<UpdateUser> updateUser(@RequestBody UpdateUser updateUser,
                                                   Authentication authentication) {
         UserEntity userEntity = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(authentication.getName()));
         userEntity.setFirstName(updateUser.getFirstName());
         userEntity.setLastName(updateUser.getLastName());
         userEntity.setPhone(updateUser.getPhone());
@@ -76,9 +82,9 @@ public class UserController {
     public ResponseEntity<?> setPassword(@RequestBody NewPassword newPassword,
                                           Authentication authentication) {
         UserEntity userEntity = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(authentication.getName()));
         if (!passwordEncoder.matches(newPassword.getCurrentPassword(), userEntity.getPassword())) {
-            return ResponseEntity.badRequest().build();
+            throw new InvalidPasswordException();
         }
         userEntity.setPassword(passwordEncoder.encode(newPassword.getNewPassword()));
         userRepository.save(userEntity);
@@ -92,8 +98,8 @@ public class UserController {
     public ResponseEntity<?> updateUserImage(@RequestParam("image") MultipartFile image,
                                               Authentication authentication) {
         UserEntity userEntity = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        userEntity.setImage(image.getOriginalFilename());
+                .orElseThrow(() -> new UserNotFoundException(authentication.getName()));
+        userEntity.setImage(imageService.saveImage(image));
         userRepository.save(userEntity);
         return ResponseEntity.ok().build();
     }
