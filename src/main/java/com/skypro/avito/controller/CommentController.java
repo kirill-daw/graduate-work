@@ -1,5 +1,9 @@
 package com.skypro.avito.controller;
 
+import com.skypro.avito.dto.Comment;
+import com.skypro.avito.dto.Comments;
+import com.skypro.avito.dto.CreateOrUpdateComment;
+import com.skypro.avito.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -7,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -15,15 +20,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.skypro.avito.dto.Comment;
-import com.skypro.avito.dto.Comments;
-import com.skypro.avito.dto.CreateOrUpdateComment;
-
-import java.util.Collections;
 
 @RestController
 @RequestMapping("/ads")
 public class CommentController {
+
+    private final CommentService commentService;
+
+    public CommentController(CommentService commentService) {
+        this.commentService = commentService;
+    }
 
     @Operation(summary = "Получение комментариев объявления", operationId = "getComments")
     @ApiResponse(responseCode = "200", description = "OK",
@@ -33,8 +39,7 @@ public class CommentController {
     @ApiResponse(responseCode = "404", description = "Not found")
     @GetMapping("/{adId}/comments")
     public ResponseEntity<Comments> getComments(@PathVariable Integer adId) {
-        Comments comments = new Comments(0, Collections.emptyList());
-        return ResponseEntity.ok(comments);
+        return ResponseEntity.ok(commentService.getComments(adId));
     }
 
     @Operation(summary = "Добавление комментария к объявлению", operationId = "addComment")
@@ -45,8 +50,9 @@ public class CommentController {
     @ApiResponse(responseCode = "404", description = "Not found")
     @PostMapping("/{adId}/comments")
     public ResponseEntity<Comment> addComment(@PathVariable Integer adId,
-                                              @RequestBody CreateOrUpdateComment createOrUpdateComment) {
-        Comment comment = new Comment(1, null, null, null, null, createOrUpdateComment.getText());
+                                              @RequestBody CreateOrUpdateComment createOrUpdateComment,
+                                              Authentication authentication) {
+        Comment comment = commentService.addComment(adId, createOrUpdateComment, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(comment);
     }
 
@@ -58,6 +64,7 @@ public class CommentController {
     @DeleteMapping("/{adId}/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(@PathVariable Integer adId,
                                               @PathVariable Integer commentId) {
+        commentService.deleteComment(adId, commentId);
         return ResponseEntity.noContent().build();
     }
 
@@ -72,7 +79,6 @@ public class CommentController {
     public ResponseEntity<Comment> updateComment(@PathVariable Integer adId,
                                                  @PathVariable Integer commentId,
                                                  @RequestBody CreateOrUpdateComment createOrUpdateComment) {
-        Comment comment = new Comment(commentId, null, null, null, null, createOrUpdateComment.getText());
-        return ResponseEntity.ok(comment);
+        return ResponseEntity.ok(commentService.updateComment(adId, commentId, createOrUpdateComment));
     }
 }

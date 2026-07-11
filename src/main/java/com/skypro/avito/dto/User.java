@@ -14,7 +14,7 @@ public class User {
     private Integer id;
 
     @Schema(description = "логин пользователя")
-    private String email;
+    private String username;
 
     @Schema(description = "имя пользователя")
     private String firstName;

@@ -1,12 +1,22 @@
 package com.skypro.avito.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.skypro.avito.dto.Ad;
+import com.skypro.avito.dto.Ads;
+import com.skypro.avito.dto.CreateOrUpdateAd;
+import com.skypro.avito.dto.ExtendedAd;
+import com.skypro.avito.service.AdService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -15,19 +25,22 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import com.skypro.avito.dto.Ad;
-import com.skypro.avito.dto.Ads;
-import com.skypro.avito.dto.CreateOrUpdateAd;
-import com.skypro.avito.dto.ExtendedAd;
-
-import java.util.Collections;
 
 @RestController
 @RequestMapping("/ads")
 public class AdController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdController.class);
+
+    private final AdService adService;
+    private final ObjectMapper objectMapper;
+
+    public AdController(AdService adService, ObjectMapper objectMapper) {
+        this.adService = adService;
+        this.objectMapper = objectMapper;
+    }
 
     @Operation(summary = "Получение всех объявлений", operationId = "getAllAds")
     @ApiResponse(responseCode = "200", description = "OK",
@@ -35,7 +48,9 @@ public class AdController {
                     schema = @Schema(implementation = Ads.class)))
     @GetMapping
     public ResponseEntity<Ads> getAllAds() {
-        Ads ads = new Ads(0, Collections.emptyList());
+        log.info("GET /ads called");
+        Ads ads = adService.getAllAds();
+        log.info("GET /ads returning {} ads", ads.getCount());
         return ResponseEntity.ok(ads);
     }
 
@@ -45,9 +60,11 @@ public class AdController {
                     schema = @Schema(implementation = Ad.class)))
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Ad> addAd(@RequestPart("properties") CreateOrUpdateAd properties,
-                                    @RequestPart("image") MultipartFile image) {
-        Ad ad = new Ad(1, null, null, null, null);
+    public ResponseEntity<Ad> addAd(@RequestParam("properties") String properties,
+                                    @RequestParam("image") MultipartFile image,
+                                    Authentication authentication) throws JsonProcessingException {
+        CreateOrUpdateAd createOrUpdateAd = objectMapper.readValue(properties, CreateOrUpdateAd.class);
+        Ad ad = adService.addAd(createOrUpdateAd, image, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(ad);
     }
 
@@ -59,8 +76,7 @@ public class AdController {
     @ApiResponse(responseCode = "404", description = "Not found")
     @GetMapping("/{id}")
     public ResponseEntity<ExtendedAd> getAd(@PathVariable Integer id) {
-        ExtendedAd extendedAd = new ExtendedAd();
-        return ResponseEntity.ok(extendedAd);
+        return ResponseEntity.ok(adService.getAd(id));
     }
 
     @Operation(summary = "Удаление объявления", operationId = "removeAd")
@@ -70,6 +86,7 @@ public class AdController {
     @ApiResponse(responseCode = "404", description = "Not found")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> removeAd(@PathVariable Integer id) {
+        adService.removeAd(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -83,8 +100,7 @@ public class AdController {
     @PatchMapping("/{id}")
     public ResponseEntity<Ad> updateAd(@PathVariable Integer id,
                                        @RequestBody CreateOrUpdateAd createOrUpdateAd) {
-        Ad ad = new Ad(id, null, createOrUpdateAd.getPrice(), createOrUpdateAd.getTitle(), null);
-        return ResponseEntity.ok(ad);
+        return ResponseEntity.ok(adService.updateAd(id, createOrUpdateAd));
     }
 
     @Operation(summary = "Получение объявлений авторизованного пользователя", operationId = "getAdsMe")
@@ -93,8 +109,11 @@ public class AdController {
                     schema = @Schema(implementation = Ads.class)))
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @GetMapping("/me")
-    public ResponseEntity<Ads> getAdsMe() {
-        Ads ads = new Ads(0, Collections.emptyList());
+    public ResponseEntity<Ads> getAdsMe(Authentication authentication) {
+        String username = authentication.getName();
+        log.info("getAdsMe called for user: {}", username);
+        Ads ads = adService.getAdsMe(username);
+        log.info("getAdsMe returning {} ads for user: {}", ads.getCount(), username);
         return ResponseEntity.ok(ads);
     }
 
