@@ -8,6 +8,7 @@ import com.skypro.avito.dto.CreateOrUpdateAd;
 import com.skypro.avito.dto.ExtendedAd;
 import com.skypro.avito.service.AdService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -60,9 +61,16 @@ public class AdController {
                     schema = @Schema(implementation = Ad.class)))
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Ad> addAd(@RequestParam("properties") String properties,
-                                    @RequestParam("image") MultipartFile image,
-                                    Authentication authentication) throws JsonProcessingException {
+    public ResponseEntity<Ad> addAd(
+            @RequestParam("properties")
+            @Parameter(description = "JSON с полями title, price, description",
+                    schema = @Schema(implementation = CreateOrUpdateAd.class))
+            String properties,
+            @RequestParam("image")
+            @Parameter(description = "Изображение объявления",
+                    schema = @Schema(type = "string", format = "binary"))
+            MultipartFile image,
+            Authentication authentication) throws JsonProcessingException {
         CreateOrUpdateAd createOrUpdateAd = objectMapper.readValue(properties, CreateOrUpdateAd.class);
         Ad ad = adService.addAd(createOrUpdateAd, image, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(ad);
