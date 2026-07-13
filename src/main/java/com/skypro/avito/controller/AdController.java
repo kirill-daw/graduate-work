@@ -8,7 +8,6 @@ import com.skypro.avito.dto.CreateOrUpdateAd;
 import com.skypro.avito.dto.ExtendedAd;
 import com.skypro.avito.service.AdService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,7 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -62,16 +61,10 @@ public class AdController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Ad> addAd(
-            @RequestParam("properties")
-            @Parameter(description = "JSON с полями title, price, description",
-                    schema = @Schema(implementation = CreateOrUpdateAd.class))
-            String properties,
-            @RequestParam("image")
-            @Parameter(description = "Изображение объявления",
-                    schema = @Schema(type = "string", format = "binary"))
-            MultipartFile image,
+            @RequestPart("properties") String propertiesJson,
+            @RequestPart("image") MultipartFile image,
             Authentication authentication) throws JsonProcessingException {
-        CreateOrUpdateAd createOrUpdateAd = objectMapper.readValue(properties, CreateOrUpdateAd.class);
+        CreateOrUpdateAd createOrUpdateAd = objectMapper.readValue(propertiesJson, CreateOrUpdateAd.class);
         Ad ad = adService.addAd(createOrUpdateAd, image, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(ad);
     }
@@ -133,7 +126,7 @@ public class AdController {
     @ApiResponse(responseCode = "404", description = "Not found")
     @PatchMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<byte[]> updateImage(@PathVariable Integer id,
-                                              @RequestParam("image") MultipartFile image) {
+                                              @RequestPart("image") MultipartFile image) {
         adService.updateImage(id, image);
         return ResponseEntity.ok(new byte[0]);
     }
