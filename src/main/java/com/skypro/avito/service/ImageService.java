@@ -27,7 +27,7 @@ public class ImageService {
 
     @PostConstruct
     public void init() {
-        Path uploadDir = Paths.get(uploadPath).toAbsolutePath();
+        Path uploadDir = Paths.get(uploadPath).toAbsolutePath().normalize();
         if (!Files.exists(uploadDir)) {
             try {
                 Files.createDirectories(uploadDir);
@@ -42,7 +42,7 @@ public class ImageService {
     public String saveImage(MultipartFile image) {
         String extension = getExtension(image.getOriginalFilename());
         String filename = UUID.randomUUID() + "." + extension;
-        Path filePath = Paths.get(uploadPath, filename).toAbsolutePath();
+        Path filePath = Paths.get(uploadPath, filename).toAbsolutePath().normalize();
         log.info("Saving image: {}", filename);
         log.info("File path: {}", filePath);
         try {
