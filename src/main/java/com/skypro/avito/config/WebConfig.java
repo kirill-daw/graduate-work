@@ -14,16 +14,16 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${app.image.upload-path:./uploads/ads/}")
     private String uploadPath;
 
-    private String absoluteUploadPath;
+    private String absoluteUploadUrl;
 
     @PostConstruct
     public void init() {
-        absoluteUploadPath = Paths.get(uploadPath).toAbsolutePath().normalize() + "/";
+        absoluteUploadUrl = Paths.get(uploadPath).toAbsolutePath().normalize().toUri().toString();
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/images/ads/**")
-                .addResourceLocations("file:" + absoluteUploadPath);
+                .addResourceLocations(absoluteUploadUrl);
     }
 }

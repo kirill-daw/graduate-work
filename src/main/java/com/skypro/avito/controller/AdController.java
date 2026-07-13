@@ -61,8 +61,10 @@ public class AdController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Ad> addAd(
-            @RequestPart("properties") String propertiesJson,
-            @RequestPart("image") MultipartFile image,
+            @RequestPart("properties") @Schema(type = "string", example = "{\"title\":\"Товар\",\"price\":1000,\"description\":\"Описание\"}")
+            String propertiesJson,
+            @RequestPart("image") @Schema(type = "string", format = "binary")
+            MultipartFile image,
             Authentication authentication) throws JsonProcessingException {
         CreateOrUpdateAd createOrUpdateAd = objectMapper.readValue(propertiesJson, CreateOrUpdateAd.class);
         Ad ad = adService.addAd(createOrUpdateAd, image, authentication.getName());
