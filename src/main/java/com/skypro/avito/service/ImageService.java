@@ -21,33 +21,49 @@ public class ImageService {
 
     private final String uploadPath;
 
-    public ImageService(@Value("${app.image.upload-path:./uploads/ads/}") String uploadPath) {
+    private final String adsDir;
+    private final String usersDir;
+
+    public ImageService(@Value("${app.image.upload-path:./uploads/}") String uploadPath) {
         this.uploadPath = uploadPath;
+        this.adsDir = uploadPath + "ads/";
+        this.usersDir = uploadPath + "users/";
     }
 
     @PostConstruct
     public void init() {
-        Path uploadDir = Paths.get(uploadPath).toAbsolutePath().normalize();
-        if (!Files.exists(uploadDir)) {
-            try {
-                Files.createDirectories(uploadDir);
-                log.info("Created upload directory: {}", uploadDir);
-            } catch (IOException e) {
-                throw new RuntimeException("Could not create upload directory: " + uploadDir, e);
-            }
-        }
-        log.info("Upload directory: {}", uploadDir);
+        createDir(adsDir);
+        createDir(usersDir);
     }
 
-    public String saveImage(MultipartFile image) {
+    private void createDir(String dir) {
+        Path path = Paths.get(dir).toAbsolutePath().normalize();
+        if (!Files.exists(path)) {
+            try {
+                Files.createDirectories(path);
+                log.info("Created directory: {}", path);
+            } catch (IOException e) {
+                throw new RuntimeException("Could not create directory: " + path, e);
+            }
+        }
+        log.info("Directory ready: {}", path);
+    }
+
+    public String saveAdImage(MultipartFile image) {
+        return saveImage(image, adsDir);
+    }
+
+    public String saveAvatar(MultipartFile file) {
+        return saveImage(file, usersDir);
+    }
+
+    private String saveImage(MultipartFile image, String directory) {
         String extension = getExtension(image.getOriginalFilename());
         String filename = UUID.randomUUID() + "." + extension;
-        Path filePath = Paths.get(uploadPath, filename).toAbsolutePath().normalize();
-        log.info("Saving image: {}", filename);
-        log.info("File path: {}", filePath);
+        Path filePath = Paths.get(directory, filename).toAbsolutePath().normalize();
+        log.info("Saving image: {} to {}", filename, filePath);
         try {
             Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            log.info("File exists after save: {}", Files.exists(filePath));
         } catch (IOException e) {
             log.error("Failed to save image: {}", filePath, e);
             throw new RuntimeException("Failed to save image: " + filename, e);

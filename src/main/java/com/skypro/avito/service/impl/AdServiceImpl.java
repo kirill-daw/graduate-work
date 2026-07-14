@@ -53,7 +53,7 @@ public class AdServiceImpl implements AdService {
                 .orElseThrow(() -> new UserNotFoundException(username));
         AdEntity adEntity = adMapper.toEntity(createOrUpdateAd);
         adEntity.setAuthor(user);
-        adEntity.setImage(imageService.saveImage(image));
+        adEntity.setImage(imageService.saveAdImage(image));
         adEntity.setCreatedAt(System.currentTimeMillis());
         AdEntity saved = adRepository.save(adEntity);
         return adMapper.toAd(saved);
@@ -100,7 +100,7 @@ public class AdServiceImpl implements AdService {
     public void updateImage(Integer id, MultipartFile image) {
         AdEntity adEntity = adRepository.findById(id)
                 .orElseThrow(() -> new AdNotFoundException(id));
-        adEntity.setImage(imageService.saveImage(image));
+        adEntity.setImage(imageService.saveAdImage(image));
         adRepository.save(adEntity);
     }
 }

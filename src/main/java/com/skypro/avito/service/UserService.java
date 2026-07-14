@@ -11,5 +11,5 @@ public interface UserService {
 
     void changePassword(String username, String currentPassword, String newPassword);
 
-    void updateUserImage(String username, String imagePath);
+    void updateAvatar(String username, String filename);
 }

@@ -11,19 +11,23 @@ import java.nio.file.Paths;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${app.image.upload-path:./uploads/ads/}")
+    @Value("${app.image.upload-path:./uploads/}")
     private String uploadPath;
 
-    private String absoluteUploadUrl;
+    private String adsDirUrl;
+    private String usersDirUrl;
 
     @PostConstruct
     public void init() {
-        absoluteUploadUrl = Paths.get(uploadPath).toAbsolutePath().normalize().toUri().toString();
+        adsDirUrl = Paths.get(uploadPath + "ads/").toAbsolutePath().normalize().toUri().toString();
+        usersDirUrl = Paths.get(uploadPath + "users/").toAbsolutePath().normalize().toUri().toString();
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/images/ads/**")
-                .addResourceLocations(absoluteUploadUrl);
+                .addResourceLocations(adsDirUrl);
+        registry.addResourceHandler("/images/users/**")
+                .addResourceLocations(usersDirUrl);
     }
 }
