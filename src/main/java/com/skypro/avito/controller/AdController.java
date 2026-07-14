@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -60,10 +61,11 @@ public class AdController {
                     schema = @Schema(implementation = Ad.class)))
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Ad> addAd(@RequestParam("properties") String properties,
-                                    @RequestParam("image") MultipartFile image,
-                                    Authentication authentication) throws JsonProcessingException {
-        CreateOrUpdateAd createOrUpdateAd = objectMapper.readValue(properties, CreateOrUpdateAd.class);
+    public ResponseEntity<Ad> addAd(
+            @RequestParam("properties") String propertiesJson,
+            @RequestParam("image") MultipartFile image,
+            Authentication authentication) throws JsonProcessingException {
+        CreateOrUpdateAd createOrUpdateAd = objectMapper.readValue(propertiesJson, CreateOrUpdateAd.class);
         Ad ad = adService.addAd(createOrUpdateAd, image, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(ad);
     }
@@ -125,7 +127,8 @@ public class AdController {
     @ApiResponse(responseCode = "404", description = "Not found")
     @PatchMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<byte[]> updateImage(@PathVariable Integer id,
-                                              @RequestParam("image") MultipartFile image) {
+                                              @RequestPart("image") MultipartFile image) {
+        adService.updateImage(id, image);
         return ResponseEntity.ok(new byte[0]);
     }
 }
