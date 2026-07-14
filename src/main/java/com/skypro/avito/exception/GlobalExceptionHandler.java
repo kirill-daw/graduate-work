@@ -1,5 +1,6 @@
 package com.skypro.avito.exception;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.skypro.avito.dto.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,20 +67,12 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST));
     }
 
-    @ExceptionHandler(AdAccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAdAccessDenied(AdAccessDeniedException e) {
-        log.warn("Ad access denied: {}", e.getMessage());
+    @ExceptionHandler(JsonParseException.class)
+    public ResponseEntity<ErrorResponse> handleJsonParse(JsonParseException e) {
+        log.warn("Invalid JSON: {}", e.getMessage());
         return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(new ErrorResponse(e.getMessage(), HttpStatus.FORBIDDEN));
-    }
-
-    @ExceptionHandler(CommentAccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleCommentAccessDenied(CommentAccessDeniedException e) {
-        log.warn("Comment access denied: {}", e.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(new ErrorResponse(e.getMessage(), HttpStatus.FORBIDDEN));
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse("Invalid request data", HttpStatus.BAD_REQUEST));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

@@ -3,12 +3,8 @@ package com.skypro.avito.controller;
 import com.skypro.avito.dto.NewPassword;
 import com.skypro.avito.dto.UpdateUser;
 import com.skypro.avito.dto.User;
-import com.skypro.avito.entity.UserEntity;
-import com.skypro.avito.exception.InvalidPasswordException;
-import com.skypro.avito.exception.UserNotFoundException;
-import com.skypro.avito.mapper.UserMapper;
-import com.skypro.avito.repository.UserRepository;
 import com.skypro.avito.service.ImageService;
+import com.skypro.avito.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,18 +25,11 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/users")
 public class UserController {
 
-    private final UserRepository userRepository;
-    private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
     private final ImageService imageService;
 
-    public UserController(UserRepository userRepository,
-                          UserMapper userMapper,
-                          PasswordEncoder passwordEncoder,
-                          ImageService imageService) {
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-        this.passwordEncoder = passwordEncoder;
+    public UserController(UserService userService, ImageService imageService) {
+        this.userService = userService;
         this.imageService = imageService;
     }
 
@@ -52,9 +40,7 @@ public class UserController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @GetMapping("/me")
     public ResponseEntity<User> getUser(Authentication authentication) {
-        UserEntity userEntity = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new UserNotFoundException(authentication.getName()));
-        return ResponseEntity.ok(userMapper.toUser(userEntity));
+        return ResponseEntity.ok(userService.getUserByUsername(authentication.getName()));
     }
 
     @Operation(summary = "Обновление информации об авторизованном пользователе", operationId = "updateUser")
@@ -63,15 +49,9 @@ public class UserController {
                     schema = @Schema(implementation = UpdateUser.class)))
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PatchMapping("/me")
-    public ResponseEntity<UpdateUser> updateUser(@RequestBody UpdateUser updateUser,
-                                                  Authentication authentication) {
-        UserEntity userEntity = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new UserNotFoundException(authentication.getName()));
-        userEntity.setFirstName(updateUser.getFirstName());
-        userEntity.setLastName(updateUser.getLastName());
-        userEntity.setPhone(updateUser.getPhone());
-        userRepository.save(userEntity);
-        return ResponseEntity.ok(userMapper.toUpdateUser(userEntity));
+    public ResponseEntity<User> updateUser(@RequestBody UpdateUser updateUser,
+                                           Authentication authentication) {
+        return ResponseEntity.ok(userService.updateUser(authentication.getName(), updateUser));
     }
 
     @Operation(summary = "Обновление пароля", operationId = "setPassword")
@@ -81,13 +61,8 @@ public class UserController {
     @PostMapping("/set_password")
     public ResponseEntity<?> setPassword(@RequestBody NewPassword newPassword,
                                           Authentication authentication) {
-        UserEntity userEntity = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new UserNotFoundException(authentication.getName()));
-        if (!passwordEncoder.matches(newPassword.getCurrentPassword(), userEntity.getPassword())) {
-            throw new InvalidPasswordException();
-        }
-        userEntity.setPassword(passwordEncoder.encode(newPassword.getNewPassword()));
-        userRepository.save(userEntity);
+        userService.changePassword(authentication.getName(),
+                newPassword.getCurrentPassword(), newPassword.getNewPassword());
         return ResponseEntity.ok().build();
     }
 
@@ -97,10 +72,7 @@ public class UserController {
     @PatchMapping(value = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateUserImage(@RequestParam("image") MultipartFile image,
                                               Authentication authentication) {
-        UserEntity userEntity = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new UserNotFoundException(authentication.getName()));
-        userEntity.setImage(imageService.saveImage(image));
-        userRepository.save(userEntity);
+        userService.updateUserImage(authentication.getName(), imageService.saveImage(image));
         return ResponseEntity.ok().build();
     }
 }
