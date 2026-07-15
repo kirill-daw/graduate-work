@@ -16,11 +16,8 @@ public interface UserMapper {
     @Mapping(target = "comments", ignore = true)
     UserEntity toEntity(RegisterReq registerReq);
 
+    @Mapping(target = "image", expression = "java(userEntity.getImage() != null ? \"/images/users/\" + userEntity.getImage() : null)")
     User toUser(UserEntity userEntity);
-
-    default String mapRoleToString(com.skypro.avito.dto.Role role) {
-        return role != null ? role.name() : null;
-    }
 
     UpdateUser toUpdateUser(UserEntity userEntity);
 }

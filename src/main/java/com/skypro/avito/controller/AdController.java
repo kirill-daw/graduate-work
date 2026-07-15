@@ -62,7 +62,7 @@ public class AdController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Ad> addAd(
-            @RequestParam("properties") String propertiesJson,
+            @RequestPart("properties") String propertiesJson,
             @RequestParam("image") MultipartFile image,
             Authentication authentication) throws JsonProcessingException {
         CreateOrUpdateAd createOrUpdateAd = objectMapper.readValue(propertiesJson, CreateOrUpdateAd.class);
@@ -127,7 +127,7 @@ public class AdController {
     @ApiResponse(responseCode = "404", description = "Not found")
     @PatchMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<byte[]> updateImage(@PathVariable Integer id,
-                                              @RequestPart("image") MultipartFile image) {
+                                              @RequestParam("image") MultipartFile image) {
         adService.updateImage(id, image);
         return ResponseEntity.ok(new byte[0]);
     }

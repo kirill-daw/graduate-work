@@ -21,7 +21,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -251,5 +250,42 @@ class SecurityIntegrationTest {
                         .content(objectMapper.writeValueAsString(body))
                         .with(user("owner").password("password").roles("USER")))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateAvatar_shouldReturn200() throws Exception {
+        MockMultipartFile image = new MockMultipartFile("image", "avatar.jpg",
+                MediaType.IMAGE_JPEG_VALUE, new byte[]{1, 2, 3, 4, 5});
+        mockMvc.perform(multipart(HttpMethod.PATCH, "/users/me/image")
+                        .file(image)
+                        .with(user("owner").password("password").roles("USER")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getAdImage_shouldReturn404_forMissing() throws Exception {
+        mockMvc.perform(get("/images/ads/nonexistent.jpg"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getUserImage_shouldReturn404_forMissing() throws Exception {
+        mockMvc.perform(get("/images/users/nonexistent.jpg"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getAdImage_shouldReturn200_withImage() throws Exception {
+        mockMvc.perform(multipart("/ads")
+                        .file(new MockMultipartFile("image", "test.jpg",
+                                MediaType.IMAGE_JPEG_VALUE, new byte[]{1, 2, 3}))
+                        .param("properties", "{\"title\":\"Test\",\"price\":1000,\"description\":\"Test ad\"}")
+                        .with(user("owner").password("password").roles("USER")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.image").isNotEmpty());
+
+        String filename = "nonexistent";
+        mockMvc.perform(get("/images/ads/" + filename))
+                .andExpect(status().isNotFound());
     }
 }

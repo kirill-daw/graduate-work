@@ -70,9 +70,10 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "OK")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @PatchMapping(value = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> updateUserImage(@RequestParam("image") MultipartFile image,
-                                              Authentication authentication) {
-        userService.updateUserImage(authentication.getName(), imageService.saveImage(image));
+    public ResponseEntity<?> updateAvatar(@RequestParam("image") MultipartFile image,
+                                          Authentication authentication) {
+        String filename = imageService.saveAvatar(image);
+        userService.updateAvatar(authentication.getName(), filename);
         return ResponseEntity.ok().build();
     }
 }

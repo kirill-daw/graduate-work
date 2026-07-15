@@ -55,10 +55,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUserImage(String username, String imagePath) {
+    public void updateAvatar(String username, String filename) {
         var userEntity = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
-        userEntity.setImage(imagePath);
+        userEntity.setImage(filename);
         userRepository.save(userEntity);
     }
 }
