@@ -5,6 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO для детального представления объявления.
+ * <p>
+ * Используется в ответе на запрос {@code GET /ads/{id}}.
+ * Содержит полную информацию об объявлении и авторе, включая имя, фамилию, телефон и email.
+ * </p>
+ */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

@@ -5,6 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO для создания или обновления объявления.
+ * <p>
+ * Используется как тело запроса для {@code POST /ads} и {@code PATCH /ads/{id}}.
+ * Содержит только основные поля: заголовок, цену и описание (картинка передаётся отдельно как multipart-файл).
+ * </p>
+ */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

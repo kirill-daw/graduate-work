@@ -5,7 +5,6 @@ import com.skypro.avito.dto.CreateOrUpdateAd;
 import com.skypro.avito.dto.CreateOrUpdateComment;
 import com.skypro.avito.dto.NewPassword;
 import com.skypro.avito.dto.Role;
-import com.skypro.avito.dto.UpdateUser;
 import com.skypro.avito.entity.AdEntity;
 import com.skypro.avito.entity.CommentEntity;
 import com.skypro.avito.entity.UserEntity;
@@ -28,6 +27,20 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Интеграционные тесты для проверки безопасности и прав доступа.
+ * <p>
+ * Покрывают сценарии:
+ * <ul>
+ *   <li>Публичный доступ к GET /ads и GET /ads/{id}</li>
+ *   <li>Авторизация для POST /ads</li>
+ *   <li>Проверка прав на редактирование и удаление объявлений (владелец, другой пользователь, администратор)</li>
+ *   <li>Аналогичные проверки для комментариев</li>
+ *   <li>Смена пароля (правильный и неправильный старый пароль)</li>
+ *   <li>Загрузка аватарки</li>
+ * </ul>
+ * </p>
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -57,6 +70,19 @@ class SecurityIntegrationTest {
     private AdEntity ad;
     private CommentEntity comment;
 
+    /**
+     * Настраивает тестовые данные перед каждым тестом.
+     * <p>
+     * Создаёт:
+     * <ul>
+     *   <li>Владельца объявления и комментария</li>
+     *   <li>Другого пользователя</li>
+     *   <li>Администратора</li>
+     *   <li>Одно объявление (принадлежит владельцу)</li>
+     *   <li>Один комментарий (принадлежит владельцу)</li>
+     * </ul>
+     * </p>
+     */
     @BeforeEach
     void setUp() {
         owner = userRepository.save(new UserEntity(null, "owner",
@@ -76,6 +102,7 @@ class SecurityIntegrationTest {
                 owner, ad, System.currentTimeMillis()));
     }
 
+    // Тесты объявлений
     @Test
     void getAdsWithoutAuth_shouldReturn200() throws Exception {
         mockMvc.perform(get("/ads"))
@@ -171,6 +198,7 @@ class SecurityIntegrationTest {
                 .andExpect(status().isNoContent());
     }
 
+    // Тесты комментариев
     @Test
     void addCommentAsUser_shouldReturn201() throws Exception {
         CreateOrUpdateComment body = new CreateOrUpdateComment("New comment for test");
@@ -232,6 +260,7 @@ class SecurityIntegrationTest {
                 .andExpect(status().isNoContent());
     }
 
+    // Тесты пользователя
     @Test
     void changePasswordWithCorrectOldPassword_shouldReturn200() throws Exception {
         NewPassword body = new NewPassword("password", "newPassword123");
@@ -262,6 +291,7 @@ class SecurityIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    // Тесты картинок
     @Test
     void getAdImage_shouldReturn404_forMissing() throws Exception {
         mockMvc.perform(get("/images/ads/nonexistent.jpg"))

@@ -5,6 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO для представления объявления в списке.
+ * <p>
+ * Используется в ответах на запросы получения всех объявлений и объявлений текущего пользователя.
+ * Поле {@code pk} является идентификатором, поле {@code author} содержит ID автора.
+ * </p>
+ */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

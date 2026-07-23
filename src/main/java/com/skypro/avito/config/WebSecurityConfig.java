@@ -16,10 +16,30 @@ import java.util.Arrays;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+/**
+ * Конфигурация безопасности Spring Security.
+ * <p>
+ * Настраивает:
+ * <ul>
+ *   <li>Публичный доступ к Swagger UI, страницам входа/регистрации и картинкам</li>
+ *   <li>Доступ без авторизации к GET-запросам на получение объявлений</li>
+ *   <li>Обязательную аутентификацию для всех остальных запросов к {@code /ads/**} и {@code /users/**}</li>
+ *   <li>Basic-аутентификацию с использованием BCrypt для хеширования паролей</li>
+ *   <li>CORS-настройки для фронтенда, работающего на порту 3000</li>
+ * </ul>
+ * </p>
+ * <p>
+ * Также включает поддержку аннотации {@code @PreAuthorize} для проверки прав
+ * в сервисном слое.
+ * </p>
+ */
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig {
 
+    /**
+     * Список URL-путей, доступных без аутентификации.
+     */
     private static final String[] AUTH_WHITELIST = {
             "/swagger-resources/**",
             "/swagger-ui.html",
@@ -30,6 +50,19 @@ public class WebSecurityConfig {
             "/images/**"
     };
 
+    /**
+     * Настраивает цепочку фильтров безопасности.
+     * <p>
+     * Отключает CSRF (для API), разрешает доступ к whitelist-адресам,
+     * разрешает GET-запросы к {@code /ads} и {@code /ads/{id}} без авторизации,
+     * требует аутентификации для остальных запросов к {@code /ads/**} и {@code /users/**},
+     * включает CORS и Basic-аутентификацию.
+     * </p>
+     *
+     * @param http объект {@link HttpSecurity} для настройки
+     * @return настроенная цепочка фильтров
+     * @throws Exception если возникает ошибка при настройке
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf()
@@ -49,11 +82,26 @@ public class WebSecurityConfig {
         return http.build();
     }
 
+    /**
+     * Создаёт бин кодировщика паролей с использованием BCrypt.
+     *
+     * @return экземпляр {@link BCryptPasswordEncoder}
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Настраивает CORS (Cross-Origin Resource Sharing) для фронтенда.
+     * <p>
+     * Разрешает запросы с источника {@code http://localhost:3000},
+     * поддерживает методы GET, POST, PATCH, DELETE, OPTIONS,
+     * разрешает любые заголовки и разрешает передачу учётных данных.
+     * </p>
+     *
+     * @return источник конфигурации CORS
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

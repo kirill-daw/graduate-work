@@ -8,6 +8,12 @@ import com.skypro.avito.service.AuthService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/**
+ * Реализация сервиса {@link AuthService} для аутентификации и регистрации.
+ * <p>
+ * Содержит бизнес-логику проверки учётных данных и создания новых пользователей.
+ * </p>
+ */
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -23,6 +29,13 @@ public class AuthServiceImpl implements AuthService {
         this.userMapper = userMapper;
     }
 
+    /**
+     * Проверяет правильность введённых логина и пароля.
+     *
+     * @param userName логин пользователя
+     * @param password пароль в открытом виде
+     * @return {@code true}, если логин и пароль совпадают, иначе {@code false}
+     */
     @Override
     public boolean login(String userName, String password) {
         return userRepository.findByUsername(userName)
@@ -30,6 +43,17 @@ public class AuthServiceImpl implements AuthService {
                 .orElse(false);
     }
 
+    /**
+     * Регистрирует нового пользователя в системе.
+     * <p>
+     * Проверяет, что логин ещё не занят. Если логин свободен,
+     * создаёт сущность, хеширует пароль и сохраняет в БД.
+     * </p>
+     *
+     * @param registerReq DTO с данными для регистрации
+     * @return {@code true}, если регистрация прошла успешно,
+     *         {@code false}, если пользователь с таким логином уже существует
+     */
     @Override
     public boolean register(RegisterReq registerReq) {
         if (userRepository.findByUsername(registerReq.getUsername()).isPresent()) {

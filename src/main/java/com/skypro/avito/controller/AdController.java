@@ -29,6 +29,13 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * REST-контроллер для управления объявлениями.
+ * <p>
+ * Предоставляет эндпоинты для получения списка объявлений, создания,
+ * редактирования, удаления, а также для работы с картинками объявлений.
+ * </p>
+ */
 @RestController
 @RequestMapping("/ads")
 public class AdController {
@@ -43,6 +50,14 @@ public class AdController {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Возвращает список всех объявлений.
+     * <p>
+     * Доступен без авторизации.
+     * </p>
+     *
+     * @return объект {@link Ads} с количеством и списком объявлений
+     */
     @Operation(summary = "Получение всех объявлений", operationId = "getAllAds")
     @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -55,6 +70,22 @@ public class AdController {
         return ResponseEntity.ok(ads);
     }
 
+    /**
+     * Создаёт новое объявление с изображением.
+     * <p>
+     * Требует авторизации. Данные передаются как multipart/form-data:
+     * <ul>
+     *   <li>{@code properties} — JSON-строка с заголовком, ценой и описанием</li>
+     *   <li>{@code image} — файл изображения</li>
+     * </ul>
+     * </p>
+     *
+     * @param propertiesJson   JSON-строка с данными объявления
+     * @param image            файл изображения
+     * @param authentication   объект аутентификации текущего пользователя
+     * @return созданное объявление в виде {@link Ad} со статусом 201 Created
+     * @throws JsonProcessingException если {@code propertiesJson} не является валидным JSON
+     */
     @Operation(summary = "Добавление объявления", operationId = "addAd")
     @ApiResponse(responseCode = "201", description = "Created",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -70,6 +101,15 @@ public class AdController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ad);
     }
 
+    /**
+     * Возвращает детальную информацию об объявлении по его идентификатору.
+     * <p>
+     * Доступен без авторизации.
+     * </p>
+     *
+     * @param id идентификатор объявления
+     * @return объект {@link ExtendedAd} с полной информацией об объявлении и авторе
+     */
     @Operation(summary = "Получение информации об объявлении", operationId = "getAds")
     @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -81,6 +121,15 @@ public class AdController {
         return ResponseEntity.ok(adService.getAd(id));
     }
 
+    /**
+     * Удаляет объявление по идентификатору.
+     * <p>
+     * Доступно только владельцу объявления или администратору.
+     * </p>
+     *
+     * @param id идентификатор объявления
+     * @return статус 204 No Content
+     */
     @Operation(summary = "Удаление объявления", operationId = "removeAd")
     @ApiResponse(responseCode = "204", description = "No Content")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -92,6 +141,16 @@ public class AdController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Обновляет данные существующего объявления.
+     * <p>
+     * Доступно только владельцу объявления или администратору.
+     * </p>
+     *
+     * @param id               идентификатор объявления
+     * @param createOrUpdateAd новые данные (заголовок, цена, описание)
+     * @return обновлённое объявление в виде {@link Ad}
+     */
     @Operation(summary = "Обновление информации об объявлении", operationId = "updateAds")
     @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -105,6 +164,15 @@ public class AdController {
         return ResponseEntity.ok(adService.updateAd(id, createOrUpdateAd));
     }
 
+    /**
+     * Возвращает список объявлений, принадлежащих текущему пользователю.
+     * <p>
+     * Требует авторизации.
+     * </p>
+     *
+     * @param authentication объект аутентификации текущего пользователя
+     * @return объект {@link Ads} с объявлениями пользователя
+     */
     @Operation(summary = "Получение объявлений авторизованного пользователя", operationId = "getAdsMe")
     @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -119,6 +187,16 @@ public class AdController {
         return ResponseEntity.ok(ads);
     }
 
+    /**
+     * Обновляет изображение объявления.
+     * <p>
+     * Доступно только владельцу объявления или администратору.
+     * </p>
+     *
+     * @param id    идентификатор объявления
+     * @param image новый файл изображения
+     * @return пустой массив байтов со статусом 200 OK
+     */
     @Operation(summary = "Обновление картинки объявления", operationId = "updateImage")
     @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(mediaType = "application/octet-stream"))

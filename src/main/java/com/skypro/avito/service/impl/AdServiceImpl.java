@@ -20,6 +20,18 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Реализация сервиса {@link AdService} для управления объявлениями.
+ * <p>
+ * Содержит бизнес-логику:
+ * <ul>
+ *   <li>Получение всех объявлений и объявлений текущего пользователя</li>
+ *   <li>Создание, обновление и удаление объявлений</li>
+ *   <li>Проверка прав доступа через {@link PreAuthorize}</li>
+ *   <li>Работа с изображениями через {@link ImageService}</li>
+ * </ul>
+ * </p>
+ */
 @Service
 public class AdServiceImpl implements AdService {
 
@@ -38,6 +50,11 @@ public class AdServiceImpl implements AdService {
         this.imageService = imageService;
     }
 
+    /**
+     * Возвращает список всех объявлений.
+     *
+     * @return объект {@link Ads}, содержащий количество и список всех объявлений
+     */
     @Override
     public Ads getAllAds() {
         List<AdEntity> adEntities = adRepository.findAll();
@@ -47,6 +64,15 @@ public class AdServiceImpl implements AdService {
         return new Ads(ads.size(), ads);
     }
 
+    /**
+     * Создаёт новое объявление для указанного пользователя.
+     *
+     * @param createOrUpdateAd данные объявления (заголовок, цена, описание)
+     * @param image            файл изображения для объявления
+     * @param username         имя пользователя (автора) из аутентификации
+     * @return созданное объявление в виде {@link Ad}
+     * @throws UserNotFoundException если пользователь не найден
+     */
     @Override
     public Ad addAd(CreateOrUpdateAd createOrUpdateAd, MultipartFile image, String username) {
         UserEntity user = userRepository.findByUsername(username)
@@ -59,6 +85,13 @@ public class AdServiceImpl implements AdService {
         return adMapper.toAd(saved);
     }
 
+    /**
+     * Возвращает детальную информацию об объявлении по его идентификатору.
+     *
+     * @param id идентификатор объявления
+     * @return DTO {@link ExtendedAd} с полной информацией об объявлении и авторе
+     * @throws AdNotFoundException если объявление не найдено
+     */
     @Override
     public ExtendedAd getAd(Integer id) {
         AdEntity adEntity = adRepository.findById(id)
@@ -66,6 +99,18 @@ public class AdServiceImpl implements AdService {
         return adMapper.toExtendedAd(adEntity);
     }
 
+    /**
+     * Обновляет данные существующего объявления.
+     * <p>
+     * Доступно только владельцу объявления или администратору.
+     * </p>
+     *
+     * @param id               идентификатор объявления
+     * @param createOrUpdateAd новые данные (заголовок, цена, описание)
+     * @return обновлённое объявление в виде {@link Ad}
+     * @throws AdNotFoundException если объявление не найдено
+     * @throws org.springframework.security.access.AccessDeniedException если пользователь не является владельцем и не ADMIN
+     */
     @Override
     @PreAuthorize("@securityService.isAdOwner(#id, authentication.name) || hasRole('ADMIN')")
     public Ad updateAd(Integer id, CreateOrUpdateAd createOrUpdateAd) {
@@ -78,12 +123,28 @@ public class AdServiceImpl implements AdService {
         return adMapper.toAd(saved);
     }
 
+    /**
+     * Удаляет объявление по идентификатору.
+     * <p>
+     * Доступно только владельцу объявления или администратору.
+     * </p>
+     *
+     * @param id идентификатор объявления
+     * @throws org.springframework.security.access.AccessDeniedException если пользователь не является владельцем и не ADMIN
+     */
     @Override
     @PreAuthorize("@securityService.isAdOwner(#id, authentication.name) || hasRole('ADMIN')")
     public void removeAd(Integer id) {
         adRepository.deleteById(id);
     }
 
+    /**
+     * Возвращает список объявлений, принадлежащих текущему пользователю.
+     *
+     * @param username имя пользователя из аутентификации
+     * @return объект {@link Ads} с объявлениями пользователя
+     * @throws UserNotFoundException если пользователь не найден
+     */
     @Override
     public Ads getAdsMe(String username) {
         UserEntity user = userRepository.findByUsername(username)
@@ -95,6 +156,17 @@ public class AdServiceImpl implements AdService {
         return new Ads(ads.size(), ads);
     }
 
+    /**
+     * Обновляет изображение объявления.
+     * <p>
+     * Доступно только владельцу объявления или администратору.
+     * </p>
+     *
+     * @param id    идентификатор объявления
+     * @param image новый файл изображения
+     * @throws AdNotFoundException если объявление не найдено
+     * @throws org.springframework.security.access.AccessDeniedException если пользователь не является владельцем и не ADMIN
+     */
     @Override
     @PreAuthorize("@securityService.isAdOwner(#id, authentication.name) || hasRole('ADMIN')")
     public void updateImage(Integer id, MultipartFile image) {

@@ -9,6 +9,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+/**
+ * JPA-сущность, представляющая комментарий к объявлению.
+ * <p>
+ * Содержит текст комментария, автора, ссылку на объявление и дату создания.
+ * </p>
+ */
+
 @Entity
 @Table(name = "comments")
 public class CommentEntity {

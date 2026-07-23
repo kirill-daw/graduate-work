@@ -3,6 +3,14 @@ package com.skypro.avito.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+/**
+ * DTO для запроса регистрации нового пользователя.
+ * <p>
+ * Используется как тело запроса {@code POST /register}.
+ * Содержит все необходимые поля для создания учётной записи.
+ * </p>
+ */
+
 @Data
 public class RegisterReq {
 

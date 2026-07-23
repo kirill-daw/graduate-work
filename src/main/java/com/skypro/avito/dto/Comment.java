@@ -5,6 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO для представления комментария.
+ * <p>
+ * Используется в ответах на запросы получения списка комментариев.
+ * Поле {@code author} содержит ID автора комментария.
+ * </p>
+ */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

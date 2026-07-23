@@ -12,9 +12,31 @@ import org.springframework.web.method.HandlerMethod;
 
 import java.util.List;
 
+/**
+ * Конфигурация для кастомизации Swagger-документации.
+ * <p>
+ * Добавляет специальную настройку для эндпоинта {@code POST /ads},
+ * чтобы Swagger UI правильно отображал поля {@code properties} и {@code image}
+ * как multipart/form-data.
+ * </p>
+ */
 @Configuration
 public class SwaggerConfig {
 
+    /**
+     * Создаёт бин {@link OperationCustomizer}, который модифицирует
+     * документацию для метода {@code addAd} в {@code AdController}.
+     * <p>
+     * Убирает автоматически добавленные параметры и заменяет их
+     * на корректное описание multipart-запроса с двумя полями:
+     * <ul>
+     *   <li>{@code properties} — JSON-строка с заголовком, ценой и описанием</li>
+     *   <li>{@code image} — бинарный файл</li>
+     * </ul>
+     * </p>
+     *
+     * @return кастомизатор для Swagger операций
+     */
     @Bean
     public OperationCustomizer multipartFormCustomizer() {
         return (Operation operation, HandlerMethod handlerMethod) -> {

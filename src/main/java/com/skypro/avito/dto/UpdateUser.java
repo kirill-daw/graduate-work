@@ -5,6 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO для обновления данных пользователя.
+ * <p>
+ * Используется как тело запроса {@code PATCH /users/me}.
+ * Позволяет обновить имя, фамилию и телефон (логин и пароль не изменяются через этот DTO).
+ * </p>
+ */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

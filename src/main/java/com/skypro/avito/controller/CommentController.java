@@ -21,6 +21,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST-контроллер для управления комментариями к объявлениям.
+ * <p>
+ * Предоставляет эндпоинты для получения списка комментариев,
+ * создания, редактирования и удаления комментариев.
+ * </p>
+ */
 @RestController
 @RequestMapping("/ads")
 public class CommentController {
@@ -31,6 +38,15 @@ public class CommentController {
         this.commentService = commentService;
     }
 
+    /**
+     * Возвращает список всех комментариев к указанному объявлению.
+     * <p>
+     * Требует авторизации.
+     * </p>
+     *
+     * @param adId идентификатор объявления
+     * @return объект {@link Comments} с количеством и списком комментариев
+     */
     @Operation(summary = "Получение комментариев объявления", operationId = "getComments")
     @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -42,6 +58,17 @@ public class CommentController {
         return ResponseEntity.ok(commentService.getComments(adId));
     }
 
+    /**
+     * Добавляет новый комментарий к объявлению.
+     * <p>
+     * Требует авторизации.
+     * </p>
+     *
+     * @param adId                   идентификатор объявления
+     * @param createOrUpdateComment  текст комментария
+     * @param authentication         объект аутентификации текущего пользователя
+     * @return созданный комментарий в виде {@link Comment} со статусом 201 Created
+     */
     @Operation(summary = "Добавление комментария к объявлению", operationId = "addComment")
     @ApiResponse(responseCode = "201", description = "Created",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -56,6 +83,16 @@ public class CommentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(comment);
     }
 
+    /**
+     * Удаляет комментарий по идентификатору.
+     * <p>
+     * Доступно только владельцу комментария или администратору.
+     * </p>
+     *
+     * @param adId      идентификатор объявления (контекст)
+     * @param commentId идентификатор комментария
+     * @return статус 204 No Content
+     */
     @Operation(summary = "Удаление комментария", operationId = "deleteComment")
     @ApiResponse(responseCode = "204", description = "No Content")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -68,6 +105,17 @@ public class CommentController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Обновляет текст существующего комментария.
+     * <p>
+     * Доступно только владельцу комментария или администратору.
+     * </p>
+     *
+     * @param adId                   идентификатор объявления (контекст)
+     * @param commentId              идентификатор комментария
+     * @param createOrUpdateComment  новый текст комментария
+     * @return обновлённый комментарий в виде {@link Comment}
+     */
     @Operation(summary = "Обновление комментария", operationId = "updateComment")
     @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
