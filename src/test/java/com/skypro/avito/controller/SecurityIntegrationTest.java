@@ -1,11 +1,11 @@
 package com.skypro.avito.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import com.skypro.avito.dto.CreateOrUpdateAd;
 import com.skypro.avito.dto.CreateOrUpdateComment;
 import com.skypro.avito.dto.NewPassword;
 import com.skypro.avito.dto.Role;
-import com.skypro.avito.dto.UpdateUser;
 import com.skypro.avito.entity.AdEntity;
 import com.skypro.avito.entity.CommentEntity;
 import com.skypro.avito.entity.UserEntity;
@@ -22,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -92,9 +93,17 @@ class SecurityIntegrationTest {
     void addAdWithoutAuth_shouldReturn401() throws Exception {
         MockMultipartFile image = new MockMultipartFile("image", "test.jpg",
                 MediaType.IMAGE_JPEG_VALUE, new byte[0]);
+
+        MockMultipartFile propertiesPart = new MockMultipartFile(
+                "properties",
+                "",
+                "application/json",
+                "{\"title\":\"Test\",\"price\":1000,\"description\":\"Test ad\"}".getBytes()
+        );
+
         mockMvc.perform(multipart("/ads")
                         .file(image)
-                        .param("properties", "{\"title\":\"Test\",\"price\":1000,\"description\":\"Test ad\"}"))
+                        .file(propertiesPart))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -102,9 +111,17 @@ class SecurityIntegrationTest {
     void addAdWithAuth_shouldReturn201() throws Exception {
         MockMultipartFile image = new MockMultipartFile("image", "test.jpg",
                 MediaType.IMAGE_JPEG_VALUE, new byte[]{1, 2, 3});
+
+        MockMultipartFile propertiesPart = new MockMultipartFile(
+                "properties",
+                "",
+                "application/json",
+                "{\"title\":\"Test\",\"price\":1000,\"description\":\"Test ad\"}".getBytes()
+        );
+
         mockMvc.perform(multipart("/ads")
                         .file(image)
-                        .param("properties", "{\"title\":\"Test\",\"price\":1000,\"description\":\"Test ad\"}")
+                        .file(propertiesPart)
                         .with(user("owner").password("password").roles("USER")))
                 .andExpect(status().isCreated());
     }
@@ -113,9 +130,17 @@ class SecurityIntegrationTest {
     void addAdWithInvalidData_shouldReturn400() throws Exception {
         MockMultipartFile image = new MockMultipartFile("image", "test.jpg",
                 MediaType.IMAGE_JPEG_VALUE, new byte[]{1, 2, 3});
+
+        MockMultipartFile propertiesPart = new MockMultipartFile(
+                "properties",
+                "",
+                "application/json",
+                "invalid json".getBytes()  // невалидный JSON
+        );
+
         mockMvc.perform(multipart("/ads")
                         .file(image)
-                        .param("properties", "invalid json")
+                        .file(propertiesPart)
                         .with(user("owner").password("password").roles("USER")))
                 .andExpect(status().isBadRequest());
     }
@@ -276,16 +301,28 @@ class SecurityIntegrationTest {
 
     @Test
     void getAdImage_shouldReturn200_withImage() throws Exception {
-        mockMvc.perform(multipart("/ads")
-                        .file(new MockMultipartFile("image", "test.jpg",
-                                MediaType.IMAGE_JPEG_VALUE, new byte[]{1, 2, 3}))
-                        .param("properties", "{\"title\":\"Test\",\"price\":1000,\"description\":\"Test ad\"}")
+        MockMultipartFile image = new MockMultipartFile("image", "test.jpg",
+                MediaType.IMAGE_JPEG_VALUE, new byte[]{1, 2, 3, 4, 5});
+
+        MockMultipartFile propertiesPart = new MockMultipartFile(
+                "properties",
+                "",
+                "application/json",
+                "{\"title\":\"Test\",\"price\":1000,\"description\":\"Test ad\"}".getBytes()
+        );
+
+        MvcResult result = mockMvc.perform(multipart("/ads")
+                        .file(image)
+                        .file(propertiesPart)
                         .with(user("owner").password("password").roles("USER")))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.image").isNotEmpty());
+                .andReturn();
 
-        String filename = "nonexistent";
-        mockMvc.perform(get("/images/ads/" + filename))
-                .andExpect(status().isNotFound());
+        String responseBody = result.getResponse().getContentAsString();
+        String imagePath = JsonPath.read(responseBody, "$.image");
+        String filename = imagePath.substring(imagePath.lastIndexOf('/') + 1);
+
+        mockMvc.perform(get("/images/ads/{filename}", filename))
+                .andExpect(status().isOk());
     }
 }
