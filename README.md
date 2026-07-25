@@ -50,12 +50,12 @@ docker run -p 3000:3000 --rm ghcr.io/dmitry-bizin/front-react-avito:v1.21
 Фронтенд будет доступен по адресу: http://localhost:3000
 Шаг 2. Запустите базу данных PostgreSQL
 bash
-docker run --name postgres-avito -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=avito_db -p 5433:5432 -d postgres:15
+docker run --name postgres-avito -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=shop_db -p 5433:5432 -d postgres:15
 Параметры подключения:
 • Порт: 5433
 • Пользователь: postgres
 • Пароль: postgres
-• Имя БД: avito_db
+• Имя БД: shop_db
 Шаг 3. Соберите и запустите бэкенд
 bash
 mvn clean install
@@ -65,7 +65,7 @@ mvn spring-boot:run
 Документация API доступна по адресу:
 http://localhost:8080/swagger-ui/index.html
 Структура проекта
-com.skypro.avito/
+com.skypro/
 ├── controller/       – REST-контроллеры
 ├── service/          – бизнес-логика (интерфейсы и реализации)
 ├── repository/       – Spring Data JPA репозитории
