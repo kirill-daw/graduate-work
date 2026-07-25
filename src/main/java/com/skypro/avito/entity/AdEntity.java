@@ -11,6 +11,14 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.List;
 
+/**
+ * JPA-сущность, представляющая объявление о продаже товара.
+ * <p>
+ * Содержит основную информацию об объявлении, автора, картинку,
+ * дату создания и список комментариев.
+ * </p>
+ */
+
 @Entity
 @Table(name = "ads")
 public class AdEntity {

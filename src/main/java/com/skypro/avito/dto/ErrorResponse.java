@@ -6,6 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 
+/**
+ * DTO для унифицированного ответа об ошибке.
+ * <p>
+ * Используется в {@link com.skypro.avito.exception.GlobalExceptionHandler}
+ * для возврата клиенту понятных сообщений об ошибках с HTTP-статусом и временем возникновения.
+ * </p>
+ */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

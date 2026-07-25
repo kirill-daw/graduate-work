@@ -7,6 +7,14 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * DTO для ответа со списком комментариев.
+ * <p>
+ * Содержит общее количество комментариев и список объектов {@link Comment}.
+ * Используется в эндпоинте {@code GET /ads/{adId}/comments}.
+ * </p>
+ */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

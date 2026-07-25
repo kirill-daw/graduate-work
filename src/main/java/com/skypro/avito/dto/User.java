@@ -5,6 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO для представления информации о пользователе.
+ * <p>
+ * Используется в ответах на запросы {@code GET /users/me} и {@code GET /users/{id}}.
+ * Содержит полную информацию о пользователе, включая роль и ссылку на аватар.
+ * </p>
+ */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

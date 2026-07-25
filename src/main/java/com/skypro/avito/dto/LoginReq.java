@@ -3,6 +3,13 @@ package com.skypro.avito.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+/**
+ * DTO для запроса авторизации (логина).
+ * <p>
+ * Используется как тело запроса {@code POST /login}.
+ * </p>
+ */
+
 @Data
 public class LoginReq {
 

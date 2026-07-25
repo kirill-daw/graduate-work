@@ -5,6 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO для смены пароля.
+ * <p>
+ * Используется как тело запроса {@code POST /users/set_password}.
+ * Содержит текущий и новый пароль для проверки и обновления.
+ * </p>
+ */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

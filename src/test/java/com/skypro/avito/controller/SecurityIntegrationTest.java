@@ -29,6 +29,26 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Интеграционные тесты для проверки безопасности, прав доступа
+ * и корректности работы эндпоинтов.
+ * <p>
+ * Покрывают сценарии:
+ * <ul>
+ *   <li>Публичный доступ к GET /ads и GET /ads/{id}</li>
+ *   <li>Авторизация для POST /ads (создание объявлений)</li>
+ *   <li>Проверка прав на редактирование и удаление объявлений (владелец, другой пользователь, администратор)</li>
+ *   <li>Аналогичные проверки для комментариев (добавление, редактирование, удаление)</li>
+ *   <li>Смена пароля (правильный и неправильный старый пароль)</li>
+ *   <li>Загрузка аватарки</li>
+ *   <li>Получение картинок (существующих и несуществующих)</li>
+ * </ul>
+ * </p>
+ * <p>
+ * Для каждого теста создаются тестовые данные: владелец, другой пользователь,
+ * администратор, одно объявление и один комментарий.
+ * </p>
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -58,6 +78,19 @@ class SecurityIntegrationTest {
     private AdEntity ad;
     private CommentEntity comment;
 
+    /**
+     * Настраивает тестовые данные перед каждым тестом.
+     * <p>
+     * Создаёт:
+     * <ul>
+     *   <li>Владельца объявления и комментария (роль USER)</li>
+     *   <li>Другого пользователя (роль USER)</li>
+     *   <li>Администратора (роль ADMIN)</li>
+     *   <li>Одно объявление (принадлежит владельцу)</li>
+     *   <li>Один комментарий (принадлежит владельцу, относится к созданному объявлению)</li>
+     * </ul>
+     * </p>
+     */
     @BeforeEach
     void setUp() {
         owner = userRepository.save(new UserEntity(null, "owner",
@@ -77,18 +110,29 @@ class SecurityIntegrationTest {
                 owner, ad, System.currentTimeMillis()));
     }
 
+    //ТЕСТЫ ОБЪЯВЛЕНИЙ
+
+    /**
+     * Проверяет, что GET /ads доступен без авторизации.
+     */
     @Test
     void getAdsWithoutAuth_shouldReturn200() throws Exception {
         mockMvc.perform(get("/ads"))
                 .andExpect(status().isOk());
     }
 
+    /**
+     * Проверяет, что GET /ads/{id} доступен без авторизации.
+     */
     @Test
     void getAdByIdWithoutAuth_shouldReturn200() throws Exception {
         mockMvc.perform(get("/ads/{id}", ad.getId()))
                 .andExpect(status().isOk());
     }
 
+    /**
+     * Проверяет, что создание объявления без авторизации возвращает 401.
+     */
     @Test
     void addAdWithoutAuth_shouldReturn401() throws Exception {
         MockMultipartFile image = new MockMultipartFile("image", "test.jpg",
@@ -107,6 +151,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    /**
+     * Проверяет, что авторизованный пользователь может создать объявление (статус 201).
+     */
     @Test
     void addAdWithAuth_shouldReturn201() throws Exception {
         MockMultipartFile image = new MockMultipartFile("image", "test.jpg",
@@ -126,6 +173,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isCreated());
     }
 
+    /**
+     * Проверяет, что при невалидном JSON в поле properties возвращается 400.
+     */
     @Test
     void addAdWithInvalidData_shouldReturn400() throws Exception {
         MockMultipartFile image = new MockMultipartFile("image", "test.jpg",
@@ -135,7 +185,7 @@ class SecurityIntegrationTest {
                 "properties",
                 "",
                 "application/json",
-                "invalid json".getBytes()  // невалидный JSON
+                "invalid json".getBytes()
         );
 
         mockMvc.perform(multipart("/ads")
@@ -145,6 +195,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    /**
+     * Проверяет, что владелец может обновить своё объявление (статус 200).
+     */
     @Test
     void updateAdAsOwner_shouldReturn200() throws Exception {
         CreateOrUpdateAd body = new CreateOrUpdateAd("Updated", 2000, "Updated desc");
@@ -155,6 +208,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    /**
+     * Проверяет, что другой пользователь не может обновить чужое объявление (статус 403).
+     */
     @Test
     void updateAdAsOtherUser_shouldReturn403() throws Exception {
         CreateOrUpdateAd body = new CreateOrUpdateAd("Updated", 2000, "Updated desc");
@@ -165,6 +221,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    /**
+     * Проверяет, что администратор может обновить любое объявление (статус 200).
+     */
     @Test
     void updateAdAsAdmin_shouldReturn200() throws Exception {
         CreateOrUpdateAd body = new CreateOrUpdateAd("Updated", 2000, "Updated desc");
@@ -175,6 +234,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    /**
+     * Проверяет, что владелец может удалить своё объявление (статус 204).
+     */
     @Test
     void deleteAdAsOwner_shouldReturn204() throws Exception {
         mockMvc.perform(delete("/ads/{id}", ad.getId())
@@ -182,6 +244,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isNoContent());
     }
 
+    /**
+     * Проверяет, что другой пользователь не может удалить чужое объявление (статус 403).
+     */
     @Test
     void deleteAdAsOtherUser_shouldReturn403() throws Exception {
         mockMvc.perform(delete("/ads/{id}", ad.getId())
@@ -189,6 +254,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    /**
+     * Проверяет, что администратор может удалить любое объявление (статус 204).
+     */
     @Test
     void deleteAdAsAdmin_shouldReturn204() throws Exception {
         mockMvc.perform(delete("/ads/{id}", ad.getId())
@@ -196,6 +264,11 @@ class SecurityIntegrationTest {
                 .andExpect(status().isNoContent());
     }
 
+    //ТЕСТЫ КОММЕНТАРИЕВ
+
+    /**
+     * Проверяет, что авторизованный пользователь может добавить комментарий (статус 201).
+     */
     @Test
     void addCommentAsUser_shouldReturn201() throws Exception {
         CreateOrUpdateComment body = new CreateOrUpdateComment("New comment for test");
@@ -206,6 +279,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isCreated());
     }
 
+    /**
+     * Проверяет, что владелец может обновить свой комментарий (статус 200).
+     */
     @Test
     void updateCommentAsOwner_shouldReturn200() throws Exception {
         CreateOrUpdateComment body = new CreateOrUpdateComment("Updated comment text");
@@ -216,6 +292,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    /**
+     * Проверяет, что другой пользователь не может обновить чужой комментарий (статус 403).
+     */
     @Test
     void updateCommentAsOtherUser_shouldReturn403() throws Exception {
         CreateOrUpdateComment body = new CreateOrUpdateComment("Updated comment text");
@@ -226,6 +305,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    /**
+     * Проверяет, что администратор может обновить любой комментарий (статус 200).
+     */
     @Test
     void updateCommentAsAdmin_shouldReturn200() throws Exception {
         CreateOrUpdateComment body = new CreateOrUpdateComment("Updated comment text");
@@ -236,6 +318,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    /**
+     * Проверяет, что владелец может удалить свой комментарий (статус 204).
+     */
     @Test
     void deleteCommentAsOwner_shouldReturn204() throws Exception {
         mockMvc.perform(delete("/ads/{adId}/comments/{commentId}", ad.getId(), comment.getId())
@@ -243,6 +328,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isNoContent());
     }
 
+    /**
+     * Проверяет, что другой пользователь не может удалить чужой комментарий (статус 403).
+     */
     @Test
     void deleteCommentAsOtherUser_shouldReturn403() throws Exception {
         mockMvc.perform(delete("/ads/{adId}/comments/{commentId}", ad.getId(), comment.getId())
@@ -250,6 +338,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    /**
+     * Проверяет, что администратор может удалить любой комментарий (статус 204).
+     */
     @Test
     void deleteCommentAsAdmin_shouldReturn204() throws Exception {
         mockMvc.perform(delete("/ads/{adId}/comments/{commentId}", ad.getId(), comment.getId())
@@ -257,6 +348,11 @@ class SecurityIntegrationTest {
                 .andExpect(status().isNoContent());
     }
 
+    //ТЕСТЫ ПОЛЬЗОВАТЕЛЯ
+
+    /**
+     * Проверяет смену пароля при правильно введённом старом пароле (статус 200).
+     */
     @Test
     void changePasswordWithCorrectOldPassword_shouldReturn200() throws Exception {
         NewPassword body = new NewPassword("password", "newPassword123");
@@ -267,6 +363,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    /**
+     * Проверяет смену пароля при неверном старом пароле (статус 400).
+     */
     @Test
     void changePasswordWithIncorrectOldPassword_shouldReturn400() throws Exception {
         NewPassword body = new NewPassword("wrongPassword", "newPassword123");
@@ -277,6 +376,9 @@ class SecurityIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    /**
+     * Проверяет загрузку аватарки пользователем (статус 200).
+     */
     @Test
     void updateAvatar_shouldReturn200() throws Exception {
         MockMultipartFile image = new MockMultipartFile("image", "avatar.jpg",
@@ -287,18 +389,30 @@ class SecurityIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    //ТЕСТЫ КАРТИНОК
+
+    /**
+     * Проверяет, что запрос к несуществующей картинке объявления возвращает 404.
+     */
     @Test
     void getAdImage_shouldReturn404_forMissing() throws Exception {
         mockMvc.perform(get("/images/ads/nonexistent.jpg"))
                 .andExpect(status().isNotFound());
     }
 
+    /**
+     * Проверяет, что запрос к несуществующей аватарке возвращает 404.
+     */
     @Test
     void getUserImage_shouldReturn404_forMissing() throws Exception {
         mockMvc.perform(get("/images/users/nonexistent.jpg"))
                 .andExpect(status().isNotFound());
     }
 
+    /**
+     * Проверяет полный цикл: создание объявления с картинкой,
+     * получение имени файла из ответа и успешное получение картинки (статус 200).
+     */
     @Test
     void getAdImage_shouldReturn200_withImage() throws Exception {
         MockMultipartFile image = new MockMultipartFile("image", "test.jpg",

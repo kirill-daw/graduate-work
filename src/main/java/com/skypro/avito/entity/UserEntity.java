@@ -13,6 +13,14 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.List;
 
+/**
+ * JPA-сущность, представляющая пользователя в базе данных.
+ * <p>
+ * Хранит учётные данные, личную информацию, а также связи с объявлениями и комментариями.
+ * Пароль хранится в зашифрованном виде (BCrypt).
+ * </p>
+ */
+
 @Entity
 @Table(name = "users")
 public class UserEntity {

@@ -20,6 +20,17 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Реализация сервиса {@link CommentService} для управления комментариями.
+ * <p>
+ * Содержит бизнес-логику:
+ * <ul>
+ *   <li>Получение комментариев по объявлению</li>
+ *   <li>Создание, обновление и удаление комментариев</li>
+ *   <li>Проверка прав доступа через {@link PreAuthorize}</li>
+ * </ul>
+ * </p>
+ */
 @Service
 public class CommentServiceImpl implements CommentService {
 
@@ -38,6 +49,12 @@ public class CommentServiceImpl implements CommentService {
         this.commentMapper = commentMapper;
     }
 
+    /**
+     * Возвращает список всех комментариев для указанного объявления.
+     *
+     * @param adId идентификатор объявления
+     * @return объект {@link Comments} с количеством и списком комментариев
+     */
     @Override
     public Comments getComments(Integer adId) {
         List<CommentEntity> commentEntities = commentRepository.findByAdId(adId);
@@ -47,6 +64,16 @@ public class CommentServiceImpl implements CommentService {
         return new Comments(comments.size(), comments);
     }
 
+    /**
+     * Добавляет новый комментарий к объявлению.
+     *
+     * @param adId                   идентификатор объявления
+     * @param createOrUpdateComment  текст комментария
+     * @param username               имя пользователя (автора) из аутентификации
+     * @return созданный комментарий в виде {@link Comment}
+     * @throws UserNotFoundException если пользователь не найден
+     * @throws AdNotFoundException   если объявление не найдено
+     */
     @Override
     public Comment addComment(Integer adId, CreateOrUpdateComment createOrUpdateComment, String username) {
         UserEntity user = userRepository.findByUsername(username)
@@ -61,12 +88,35 @@ public class CommentServiceImpl implements CommentService {
         return commentMapper.toComment(saved);
     }
 
+    /**
+     * Удаляет комментарий по его идентификатору.
+     * <p>
+     * Доступно только владельцу комментария или администратору.
+     * </p>
+     *
+     * @param adId      идентификатор объявления (используется для контекста)
+     * @param commentId идентификатор комментария
+     * @throws org.springframework.security.access.AccessDeniedException если пользователь не является владельцем и не ADMIN
+     */
     @Override
     @PreAuthorize("@securityService.isCommentOwner(#commentId, authentication.name) || hasRole('ADMIN')")
     public void deleteComment(Integer adId, Integer commentId) {
         commentRepository.deleteById(commentId);
     }
 
+    /**
+     * Обновляет текст существующего комментария.
+     * <p>
+     * Доступно только владельцу комментария или администратору.
+     * </p>
+     *
+     * @param adId                   идентификатор объявления (используется для контекста)
+     * @param commentId              идентификатор комментария
+     * @param createOrUpdateComment  новый текст комментария
+     * @return обновлённый комментарий в виде {@link Comment}
+     * @throws CommentNotFoundException если комментарий не найден
+     * @throws org.springframework.security.access.AccessDeniedException если пользователь не является владельцем и не ADMIN
+     */
     @Override
     @PreAuthorize("@securityService.isCommentOwner(#commentId, authentication.name) || hasRole('ADMIN')")
     public Comment updateComment(Integer adId, Integer commentId, CreateOrUpdateComment createOrUpdateComment) {

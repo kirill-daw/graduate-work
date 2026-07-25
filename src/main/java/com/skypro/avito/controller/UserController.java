@@ -21,6 +21,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * REST-контроллер для управления данными пользователей.
+ * <p>
+ * Предоставляет эндпоинты для получения и обновления профиля,
+ * смены пароля и загрузки аватарки.
+ * </p>
+ */
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -33,6 +40,12 @@ public class UserController {
         this.imageService = imageService;
     }
 
+    /**
+     * Возвращает информацию о текущем авторизованном пользователе.
+     *
+     * @param authentication объект аутентификации текущего пользователя
+     * @return DTO {@link User} с данными пользователя
+     */
     @Operation(summary = "Получение информации об авторизованном пользователе", operationId = "getUser")
     @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -43,6 +56,13 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserByUsername(authentication.getName()));
     }
 
+    /**
+     * Обновляет данные текущего авторизованного пользователя.
+     *
+     * @param updateUser     DTO с новыми данными (имя, фамилия, телефон)
+     * @param authentication объект аутентификации текущего пользователя
+     * @return обновлённый DTO {@link User}
+     */
     @Operation(summary = "Обновление информации об авторизованном пользователе", operationId = "updateUser")
     @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -54,18 +74,32 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUser(authentication.getName(), updateUser));
     }
 
+    /**
+     * Меняет пароль текущего пользователя.
+     *
+     * @param newPassword    DTO с текущим и новым паролем
+     * @param authentication объект аутентификации текущего пользователя
+     * @return статус 200 OK при успешной смене пароля
+     */
     @Operation(summary = "Обновление пароля", operationId = "setPassword")
     @ApiResponse(responseCode = "200", description = "OK")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "403", description = "Forbidden")
     @PostMapping("/set_password")
     public ResponseEntity<?> setPassword(@RequestBody NewPassword newPassword,
-                                          Authentication authentication) {
+                                         Authentication authentication) {
         userService.changePassword(authentication.getName(),
                 newPassword.getCurrentPassword(), newPassword.getNewPassword());
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Загружает новую аватарку для текущего пользователя.
+     *
+     * @param image          файл изображения
+     * @param authentication объект аутентификации текущего пользователя
+     * @return статус 200 OK при успешной загрузке
+     */
     @Operation(summary = "Обновление аватара авторизованного пользователя", operationId = "updateUserImage")
     @ApiResponse(responseCode = "200", description = "OK")
     @ApiResponse(responseCode = "401", description = "Unauthorized")

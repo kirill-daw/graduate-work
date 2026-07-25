@@ -14,13 +14,20 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
+/**
+ * Сервис для работы с изображениями (сохранение на диск).
+ * <p>
+ * Обеспечивает сохранение картинок объявлений и аватарок пользователей
+ * в подпапки {@code ads/} и {@code users/} внутри директории загрузок.
+ * Имена файлов генерируются с использованием UUID, чтобы избежать коллизий.
+ * </p>
+ */
 @Service
 public class ImageService {
 
     private static final Logger log = LoggerFactory.getLogger(ImageService.class);
 
     private final String uploadPath;
-
     private final String adsDir;
     private final String usersDir;
 
@@ -30,12 +37,21 @@ public class ImageService {
         this.usersDir = uploadPath + "users/";
     }
 
+    /**
+     * Инициализирует папки для хранения изображений при старте приложения.
+     * Если папки не существуют, создаёт их.
+     */
     @PostConstruct
     public void init() {
         createDir(adsDir);
         createDir(usersDir);
     }
 
+    /**
+     * Создаёт указанную директорию, если она не существует.
+     *
+     * @param dir путь к директории
+     */
     private void createDir(String dir) {
         Path path = Paths.get(dir).toAbsolutePath().normalize();
         if (!Files.exists(path)) {
@@ -49,14 +65,34 @@ public class ImageService {
         log.info("Directory ready: {}", path);
     }
 
+    /**
+     * Сохраняет изображение для объявления.
+     *
+     * @param image файл изображения
+     * @return сгенерированное уникальное имя файла
+     */
     public String saveAdImage(MultipartFile image) {
         return saveImage(image, adsDir);
     }
 
+    /**
+     * Сохраняет аватарку пользователя.
+     *
+     * @param file файл аватарки
+     * @return сгенерированное уникальное имя файла
+     */
     public String saveAvatar(MultipartFile file) {
         return saveImage(file, usersDir);
     }
 
+    /**
+     * Сохраняет изображение в указанную директорию с уникальным именем.
+     *
+     * @param image     файл изображения
+     * @param directory целевая директория
+     * @return уникальное имя файла
+     * @throws RuntimeException если не удалось сохранить файл
+     */
     private String saveImage(MultipartFile image, String directory) {
         String extension = getExtension(image.getOriginalFilename());
         String filename = UUID.randomUUID() + "." + extension;
@@ -71,6 +107,12 @@ public class ImageService {
         return filename;
     }
 
+    /**
+     * Извлекает расширение файла из его имени.
+     *
+     * @param filename имя файла
+     * @return расширение (без точки), либо {@code "jpg"} по умолчанию
+     */
     private String getExtension(String filename) {
         if (filename == null || !filename.contains(".")) {
             return "jpg";
